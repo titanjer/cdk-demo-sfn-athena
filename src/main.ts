@@ -25,6 +25,7 @@ export class SFNAthenaDemo extends Construct {
       maxResults: 10,
       resultPath: '$.QueryResults',
     });
+    const processChunk = new sfn.Pass(this, 'ProcessChunk');
     const isQueryResultsEmpty = new sfn.Choice(this, 'IsQueryResultsEmpty');
     const setNotFirst = new sfn.Pass(this, 'SetNotFirst', {
       result: sfn.Result.fromBoolean(true),
@@ -37,6 +38,7 @@ export class SFNAthenaDemo extends Construct {
         .start(startAthenaQueryExecutionJob)
         .next(setNextTokenNull)
         .next(getQueryResultsJob)
+        .next(processChunk)
         .next(isQueryResultsEmpty
           .when(sfn.Condition.isNotPresent('$.QueryResults.NextToken'), end)
           .when(sfn.Condition.isNotNull('$.QueryResults.NextToken'), setNotFirst.next(getQueryResultsJob))
